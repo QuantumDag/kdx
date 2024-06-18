@@ -1,0 +1,169 @@
+{
+    "qtmd-node-only" : {
+        "description" : "Qtmd Node",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55210",
+                    "listen": "0.0.0.0:55211",
+                    "profile": 7000,
+                    "utxoindex" : null
+                }
+            }
+        }
+    },
+
+    "qtmd-mining" : {
+        "description" : "Qtmd Node + Miner",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55210",
+                    "listen": "0.0.0.0:55211",
+                    "profile": 7000,
+                    "utxoindex" : null
+                }
+            },
+            "quantumdagminer:km0" : {
+                "args":{
+                    "miningaddr" : "qtmtest:qrjtaaaryx3ngg48p888e52fd6e7u4epjvh46p7rqz",
+                    "rpcserver":"localhost:55210",
+                    "mine-when-not-synced" : null
+                }
+            }
+        }
+    },
+    "qtmd-standalone-mining" : {
+        "description" : "Self-Contained Qtmd Mining",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55210",
+                    "listen": "0.0.0.0:55211",
+                    "profile": 7000,
+                    "utxoindex" : null
+                }
+            },
+            "qtmd:kd1" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten":"0.0.0.0:55310",
+                    "listen": "0.0.0.0:55311",
+                    "profile": 7001,
+                    "connect": "0.0.0.0:55211",
+                    "utxoindex" : null
+                }
+            },
+            "quantumdagminer:km0" : {
+                "args":{
+                    "miningaddr" : "qtmtest:qrjtaaaryx3ngg48p888e52fd6e7u4epjvh46p7rqz",
+                    "rpcserver":"localhost:55210",
+                    "mine-when-not-synced" : null
+                }
+            }
+        }
+    },
+    "full-stack" : {
+        "description" : "Full Stack",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55210",
+                    "listen": "0.0.0.0:55211",
+                    "profile": 7000,
+                    "utxoindex" : null
+                }
+            },
+            "pgsql:db0" : {
+                "port": 18787
+            },
+
+            "mqtt:mq0" : {
+                "port": 19792
+            },
+            "qtmrovd:kvd0" : {
+                "args":{
+                    "listen":"localhost:11224",
+                    "rpcserver":"localhost:55210",
+                    "dbaddress":"localhost:18787"
+                }
+            },
+            "qtmrovsyncd:kvsd0" : {
+                "args":{
+                    "rpcserver":"localhost:55210",
+                    "dbaddress":"localhost:18787",
+                    "mqttaddress": "localhost:19792",
+                    "mqttuser" : "user",
+                    "mqttpass" : "pass"
+                    }
+            },
+            "quantumdagminer:km0" : {
+                "args":{
+                    "miningaddr" : "qtmtest:qrjtaaaryx3ngg48p888e52fd6e7u4epjvh46p7rqz",
+                    "rpcserver":"localhost:55210",
+                    "mine-when-not-synced" : null
+                }
+            }
+        }
+    },
+    "full-stack-standalone-mining" : {
+        "description" : "Full Self-contained Stack",
+        "enableMining" : true,
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55210",
+                    "listen": "0.0.0.0:55211",
+                    "profile": 7000,
+                    "utxoindex" : null
+                }
+            },
+            "qtmd:kd1" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten":"0.0.0.0:55310",
+                    "listen": "0.0.0.0:55311",
+                    "profile": 7001,
+                    "connect": "0.0.0.0:55211",
+                    "utxoindex" : null
+                }
+            },
+            "pgsql:db0" : {
+                "port": 18787
+            },
+
+            "mqtt:mq0" : {
+                "port": 19792
+            },
+            "qtmrovd:kvd0" : {
+                "args":{
+                    "listen":"localhost:11224",
+                    "rpcserver":"localhost:55210",
+                    "dbaddress":"localhost:18787"
+                }
+            },
+            "qtmrovsyncd:kvsd0" : {
+                "args":{
+                    "rpcserver":"localhost:55210",
+                    "dbaddress":"localhost:18787",
+                    "mqttaddress": "localhost:19792",
+                    "mqttuser" : "user",
+                    "mqttpass" : "pass"
+                    }
+            },
+            "quantumdagminer:km0" : {
+                "args":{
+                    "miningaddr" : "qtmtest:qrjtaaaryx3ngg48p888e52fd6e7u4epjvh46p7rqz",
+                    "rpcserver":"localhost:55210",
+                    "mine-when-not-synced" : null
+                }
+            }
+        }
+    }
+
+}

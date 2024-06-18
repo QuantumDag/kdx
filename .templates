@@ -1,0 +1,124 @@
+{
+    "qtmd-node-only" : {
+        "description" : "Qtmd Node",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            }
+        }
+    },
+    "cpu-miner" : {
+        "description" : "CPU Miner",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            },
+            "gpuminer:km0" : {
+                "args":{
+                    "mining-address" : "",
+                    "threads": 1,
+                    "qtmd-address": "localhost",
+                    "port": "55110"
+                }
+            }
+        }
+    },
+    "gpu-miner" : {
+        "description" : "GPU Miner",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            },
+            "gpuminer:km0" : {
+                "args":{
+                    "mining-address" : "",
+                    "cuda-workload": 512,
+                    "qtmd-address": "localhost",
+                    "port": "55110"
+                }
+            }
+        }
+    },
+
+    "qtmd-standalone-mining" : {
+        "description" : "Self-Contained Qtmd Mining",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            },
+            "qtmd:kd1" : {
+                "reset-peers" : false,
+                "args":{
+                    "rpclisten":"0.0.0.0:55310",
+                    "listen": "0.0.0.0:55311",
+                    "profile": 7001,
+                    "connect": "0.0.0.0:55111"
+                }
+            },
+            "gpuminer:km0" : {
+                "args":{
+                    "mining-address" : "",
+                    "t": 1,
+                    "qtmd-address": "localhost",
+			        "port": "55110"
+                }
+            }
+        }
+    },
+    "qtmd-archival-only" : {
+        "description" : "Qtmd Archival Node",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "archival" : null,
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            }
+        }
+    },
+    "qtmd-archival-mining" : {
+        "description" : "Qtmd Archival Node + Miner",
+        "modules":{
+            "qtmd:kd0" : {
+                "reset-peers" : false,
+                "args":{
+                    "archival" : null,
+                    "rpclisten" : "0.0.0.0:55110",
+                    "listen": "0.0.0.0:55111",
+                    "profile": 7000
+                }
+            },
+            "gpuminer:km0" : {
+                "args":{
+                    "mining-address" : "",
+                    "t": 1,
+                    "qtmd-address": "localhost",
+			        "port": "55110"
+                }
+            }
+        }
+    }
+}
