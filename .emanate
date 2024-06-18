@@ -1,114 +1,93 @@
 "use strict";
 //sudo emanate --miner --miner-debug
 
-//const QTM_DEFAULT_BRANCH = 'v0.11.7-dev'; //'master';
 const QTM_DEFAULT_BRANCH = 'master';
 const MINER_DEFAULT_BRANCH = 'main';
 
 const E = new Emanator(__dirname, {
-    type : argv.includes('build') || flags.innosetup ? 'NODE+NWJS' : 'UTIL',
-    guid : 'c1072045-6d98-44d8-9aa5-e9be6c79bd01',
-    group : 'Qtm',
-    ident : 'kdx',
-    suffix : flags.full ? '-dev' : '',
-    title : 'KDX',
-    banner : 'KDX',
-    git : 'git@github.com:aspectron/kdx',
-    author : "ASPECTRON Inc.",
-    url : "http://aspectron.com",
-    //archive : true,
-    folder : true,
-    standalone : true,
+    type: argv.includes('build') || flags.innosetup ? 'NODE+NWJS' : 'UTIL',
+    guid: 'c1072045-6d98-44d8-9aa5-e9be6c79bd01',
+    group: 'Qtm',
+    ident: 'kdx',
+    suffix: flags.full ? '-dev' : '',
+    title: 'KDX',
+    banner: 'KDX',
+    git: 'git@github.com:QuantumDag/kdx',
+    author: "QuantumDag",
+    url: "http://quantumdag.com",
     production: true,
-    //DMG: true,
-    nwjs : { version : '0.55.0' },
-    resources : 'resources/setup',
+    nwjs: { version: '0.55.0' },
+    resources: 'resources/setup',
 
-    manifest : (manifest) => {
-        if(E.flags['with-perfmon'] && !E.flags['no-perfmon']) {
-            if(E.PLATFORM != 'macos') {
-                Object.assign(manifest.dependencies,{
+    manifest: (manifest) => {
+        if (E.flags['with-perfmon'] && !E.flags['no-perfmon']) {
+            if (E.PLATFORM != 'macos') {
+                Object.assign(manifest.dependencies, {
                     "@aspectron/process-list": "*",
-                })
+                });
             }
         }
-
-//        if(E.PLATFORM == 'macos')
-//            manifest.files.push('apps');
-
         return manifest;
     },
-})
+});
 
 E.flags['with-perfmon'] = true;
 
-if(E.flags.miner){
+if (E.flags.miner) {
     E.flags.nonpm = true;
     E.options.nonpm = true;
 }
 
 E.aux_dmg_files = async (root) => {
-    if(fs.existsSync(path.join(E.BUILD,'apps')))
-        await E.copy(path.join(E.BUILD,'apps'),path.join(root,'apps'));
-
-    //    E.copy(process.argv[0], root);
-}
-
-
+    if (fs.existsSync(path.join(E.BUILD, 'apps')))
+        await E.copy(path.join(E.BUILD, 'apps'), path.join(root, 'apps'));
+};
 
 const go = await E.modules.go('go1.16.0');
 const cargo = await E.modules.cargo('1.59.0');
 const git = await E.modules.git();
 const gcc = await E.modules.gcc();
-const npm = await E.modules.npm({ production : true });
-
-
-
+const npm = await E.modules.npm({ production: true });
 
 const qtmd = E.task('qtmd', ['origin'], async () => {
-
-    //return true;
-    if(E.PLATFORM == 'windows') {
+    if (E.PLATFORM == 'windows') {
         process.env.PATH = ['C:\\TDM-GCC-64\\bin', ...process.env.PATH.split(';')].join(';');
     }
 
-    let dest = path.join(go.SRC,'github.com/QuantumDag/');
-    if((E.flags.reset || E.flags.clean) && fs.existsSync(dest))
+    let dest = path.join(go.SRC, 'github.com/QuantumDag/');
+    if ((E.flags.reset || E.flags.clean) && fs.existsSync(dest))
         await E.emptyDir(dest);
 
     const branch = E.flags['branch'] || QTM_DEFAULT_BRANCH || 'master';
-    
-    console.log('branch:',branch);
-    
-    //const repos = { };
+    console.log('branch:', branch);
+
     const repos = [`qtmd:${branch}`];
-    if(E.flags['with-extras']) {
-        repos.push(`txgen:${branch}`,`qtmrov:${QTM_DEFAULT_BRANCH}`);
+    if (E.flags['with-extras']) {
+        repos.push(`txgen:${branch}`, `qtmrov:${QTM_DEFAULT_BRANCH}`);
     }
 
-    console.log("REPOS:".brightMagenta,repos);
+    console.log("REPOS:".brightMagenta, repos);
 
-    for(const repo of repos) {
+    for (const repo of repos) {
         let [name, git_branch] = repo.split(':');
         console.log(`git clone https://github.com/QuantumDag/${name} branch: ${git_branch || 'master'}`.brightYellow);
-        await git.clone(`https://github.com/QuantumDag/${name}`,dest, {branch : git_branch || 'master'});
+        await git.clone(`https://github.com/QuantumDag/${name}`, dest, { branch: git_branch || 'master' });
     }
 
     let targets = [
         'qtmd',
-        ...fs.readdirSync(path.join(dest,'qtmd/cmd')).map(f => `qtmd/cmd/${f}`),
+        ...fs.readdirSync(path.join(dest, 'qtmd/cmd')).map(f => `qtmd/cmd/${f}`),
     ];
 
+    let rename = {};
+    console.log('Starting target processing...');
+    let folders = [];
 
-    let rename = {}
-    console.log('Starting target processing...')
-    let folders = []
-
-    for(let target of targets) {
-        let folder = path.join(dest,target);
-        console.log('builing',folder);
+    for (let target of targets) {
+        let folder = path.join(dest, target);
+        console.log('building', folder);
         await go.build(folder);
-        console.log('done',folder);
+        console.log('done', folder);
         folders.push(folder);
     }
 
@@ -119,181 +98,142 @@ const qtmd = E.task('qtmd', ['origin'], async () => {
         file += E.PLATFORM_BINARY_EXTENSION;
         dest += E.PLATFORM_BINARY_EXTENSION;
 
-        if(!fs.existsSync(path.join(folder,file))) {
-            console.log(`Unable to locate source file: ${path.join(folder,file)}`);
+        if (!fs.existsSync(path.join(folder, file))) {
+            console.log(`Unable to locate source file: ${path.join(folder, file)}`);
             console.log(`...giving up`);
             process.exit(1);
         }
-        console.log("E.copy:", path.join(folder,file)," -> ",path.join(E.BIN,dest))
-        E.copy(path.join(folder,file),path.join(E.BIN,dest));
-        E.registerFirewallRule({ name, file : dest, binary : true });
-    })
-
-    //E.copy(path.join(dest,'qtmrov','database','migrations'),path.join(E.BIN,'database','migrations'));
+        console.log("E.copy:", path.join(folder, file), " -> ", path.join(E.BIN, dest));
+        E.copy(path.join(folder, file), path.join(E.BIN, dest));
+        E.registerFirewallRule({ name, file: dest, binary: true });
+    });
 });
 
 const miner = E.task('miner', ['origin'], async () => {
-
-    //return true;
-    if(E.PLATFORM == 'windows') {
+    if (E.PLATFORM == 'windows') {
         process.env.PATH = ['C:\\TDM-GCC-64\\bin', ...process.env.PATH.split(';')].join(';');
     }
 
-    let account = 'aspectron';//'tmrlvi';
-
+    let account = 'QuantumDag';
     let dest = path.join(cargo.SRCGITHUB, account);
-    if((E.flags.reset || E.flags.clean) && fs.existsSync(dest))
+    if ((E.flags.reset || E.flags.clean) && fs.existsSync(dest))
         await E.emptyDir(dest);
 
     const branch = E.flags['miner-branch'] || MINER_DEFAULT_BRANCH || 'main';
-    
     console.log('miner branch:', branch);
     console.log('miner dest:', dest);
-    
-    //const repos = { };
-    const repos = [`qtm-miner:${branch}`];
-    console.log("REPOS:".brightMagenta,repos);
 
-    for(const repo of repos) {
+    const repos = [`qtm-miner:${branch}`];
+    console.log("REPOS:".brightMagenta, repos);
+
+    for (const repo of repos) {
         let [name, git_branch] = repo.split(':');
         console.log(`git clone https://github.com/${account}/${name} branch: ${git_branch || 'master'}`.brightYellow);
-        await git.clone(`https://github.com/${account}/${name}`, dest, {branch : git_branch || 'master'});
+        await git.clone(`https://github.com/${account}/${name}`, dest, { branch: git_branch || 'master' });
     }
 
     let minerDest = path.join(dest, "qtm-miner");
-    console.log('Starting miner build processing...')
+    console.log('Starting miner build processing...');
 
     let release = !E.flags['miner-debug'];
     let args = {
         release,
-        p:['qtm-miner']
-    }
-
-//    if(E.PLATFORM != 'macos'){
-//        args.p.push('qtmcuda', 'qtmopencl');
-//        if(E.flags['miner-overclock'])
-//            args.features = "default,qtmcuda/overclock";
-//    }
+        p: ['qtm-miner']
+    };
 
     await cargo.build(minerDest, args);
-    
-    let targetFolder = path.join(minerDest, 'target', release?'release':'debug');
 
+    let targetFolder = path.join(minerDest, 'target', release ? 'release' : 'debug');
     let file = 'qtm-miner';
     let name = `${E.title} ${file}`;
-    
-
     file += E.PLATFORM_BINARY_EXTENSION;
-    let rename = "gpuminer"+E.PLATFORM_BINARY_EXTENSION;
+    let rename = "gpuminer" + E.PLATFORM_BINARY_EXTENSION;
 
     let files = new Map();
-    files.set(file, rename)
+    files.set(file, rename);
 
-//    if(E.PLATFORM == 'windows'){
-//        files.set('qtmcuda.dll', 0)
-//        files.set('qtmopencl.dll', 0)
-//    }else if(E.PLATFORM == 'linux'){
-//        files.set('qtmcuda.so', 0)
-//        files.set('qtmopencl.so', 0)
-//    }
-
-    files.forEach((destName, srcName)=>{
-        if(!destName)
-            destName = srcName;
+    files.forEach((destName, srcName) => {
+        if (!destName) destName = srcName;
 
         let src = path.join(targetFolder, srcName);
         let dest = path.join(E.BIN, destName);
 
-        //console.log("src", src)
-        //console.log("dest", dest)
-        
-        if(!fs.existsSync(src)) {
+        if (!fs.existsSync(src)) {
             console.log(`Unable to locate source file: ${src}`);
             console.log(`...giving up`);
             process.exit(1);
         }
-        
-        console.log("E.copy:", src, " -> ", dest)
+
+        console.log("E.copy:", src, " -> ", dest);
         E.copy(src, dest);
-        E.registerFirewallRule({ name, file : destName, binary : true });
-    })
-
-
-    //E.copy(path.join(dest,'qtmrov','database','migrations'),path.join(E.BIN,'database','migrations'));
+        E.registerFirewallRule({ name, file: destName, binary: true });
+    });
 });
 
 E.task('remote', ['origin'], async () => {
-
-    let files = (E.manifest.files||[]).map(f=>{
-        // console.log(E.REPO,'->',E.BUILD, f);
-        return E.copy(path.join(E.REPO,f), path.join(E.BUILD, f));
-    })
+    let files = (E.manifest.files || []).map(f => {
+        return E.copy(path.join(E.REPO, f), path.join(E.BUILD, f));
+    });
     E.log(`copying ${files.length} items...`);
     await Promise.all(files);
 
-    fs.writeFileSync(path.join(E.BUILD,'i18n.lock'),'');
+    fs.writeFileSync(path.join(E.BUILD, 'i18n.lock'), '');
     console.log(`i18n.lock`);
-})
+});
 
-if(!E.flags.miner){
-    const aux_deps = E.flags.auxiliary ? ['qtmd','remote'] : ['qtmd', 'miner']
-    E.task('done', aux_deps, async () => {
-    })
+if (!E.flags.miner) {
+    const aux_deps = E.flags.auxiliary ? ['qtmd', 'remote'] : ['qtmd', 'miner'];
+    E.task('done', aux_deps, async () => { });
 }
 
 E.task('aptitude', null, async () => {
-    if(E.PLATFORM != 'linux')
+    if (E.PLATFORM != 'linux')
         return;
-})
+});
 
 E.flags.docker && E.task('docker', null, async () => {
-
     E.manifest_read();
 
     const relay = ['no-cache'];
-    const args = ['-s','docker','build'].concat(relay.map(k=>E.flags[k]?`--${k}`:null)).filter(v=>v);
-    args.push('-t',`kdx:latest`,'.');
+    const args = ['-s', 'docker', 'build'].concat(relay.map(k => E.flags[k] ? `--${k}` : null)).filter(v => v);
+    args.push('-t', `kdx:latest`, '.');
     const ts0 = Date.now();
-    await E.utils.spawn('sudo', args, { cwd : __dirname, stdio: 'inherit' });
-    await E.utils.spawn('sudo',['docker','tag','kdx:latest',`kdx:${E.manifest.version}`], { cwd : __dirname, stdio: 'inherit' });
-    console.log('Docker build complete at',new Date());
+    await E.utils.spawn('sudo', args, { cwd: __dirname, stdio: 'inherit' });
+    await E.utils.spawn('sudo', ['docker', 'tag', 'kdx:latest', `kdx:${E.manifest.version}`], { cwd: __dirname, stdio: 'inherit' });
+    console.log('Docker build complete at', new Date());
     const ts1 = Date.now();
-    console.log('Docker build took'.brightBlue,`${((ts1-ts0)/1000/60).toFixed(1)}`.brightWhite,'minutes'.brightBlue)
+    console.log('Docker build took'.brightBlue, `${((ts1 - ts0) / 1000 / 60).toFixed(1)}`.brightWhite, 'minutes'.brightBlue);
 });
 
-if(E.flags.i18n){
+if (E.flags.i18n) {
     E.task('i18n', null, async () => {
         E.utils.sortAndSaveI18nFiles();
         E.utils.mergeI18nEntries2Data();
-    })
+    });
 }
 
-
-if(E.flags['local-binaries'] || E.flags['qtm'] || E.flags.miner) {
-    E.BIN = path.join(E.appFolder,'bin', E.PLATFORM_ARCH);
+if (E.flags['local-binaries'] || E.flags['qtm'] || E.flags.miner) {
+    E.BIN = path.join(E.appFolder, 'bin', E.PLATFORM_ARCH);
     mkdirp.sync(E.BIN);
 }
 
-
-if(E.flags.link) {
-    let list = ['flow-ux','flow-app','flow-utils','flow-rpc','flow-async'];
-    while(list.length) {
+if (E.flags.link) {
+    let list = ['flow-ux', 'flow-app', 'flow-utils', 'flow-rpc', 'flow-async'];
+    while (list.length) {
         let ident = list.shift();
-        await npm.link(`@aspectron/${ident}`, { cwd : __dirname, stdio : 'inherit' });
+        await npm.link(`@aspectron/${ident}`, { cwd: __dirname, stdio: 'inherit' });
     }
-}
-else if(E.flags.docker) {
+} else if (E.flags.docker) {
     E.runTask('docker');
-}else if(E.flags.i18n) {
+} else if (E.flags.i18n) {
     E.runTask('i18n');
-}else if(E.flags['qtm']) {
+} else if (E.flags['qtm']) {
     await qtmd();
-}else if(E.flags.miner){
+} else if (E.flags.miner) {
     await miner();
-}
-else if(E.flags['local-binaries']) {
+} else if (E.flags['local-binaries']) {
     E.runTask('qtmd');
     E.runTask('aptitude');
-}
-else
+} else {
     E.run();
+}
